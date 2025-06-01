@@ -5,242 +5,227 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Basket Catching Stars</title>
   <style>
-    body 
-    { 
-      margin: 0; 
-      background: #000022; 
-      overflow: hidden; 
-      color: white; 
-      font-family: Arial, sans-serif; 
+    body {
+      margin: 0;
+      background: #000022;
+      overflow: hidden;
+      color: white;
+      font-family: Arial, sans-serif;
     }
-    #game 
-    { 
-      position: relative; 
-      width: 100%; 
-      height: 100vh; 
-      background: linear-gradient(#000022, #000011); 
-      display: none; 
-      border: 1.5cm solid black; 
-      box-sizing: border-box; 
+    #game {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      background: linear-gradient(#000022, #000011);
+      display: none;
+      border: 1.5cm solid black;
+      box-sizing: border-box;
     }
-    .basket 
-    { 
-      position: absolute; 
-      bottom: 20px; 
-      width: 100px; 
-      height: 30px; 
-      background: brown; 
-      left: 50%; 
-      transform: translateX(-50%); 
-      border-radius: 10px; 
+    .basket {
+      position: absolute;
+      bottom: 20px;
+      width: 100px;
+      height: 30px;
+      background: brown;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 10px;
     }
-    .star 
-    { 
-      position: absolute; 
-      background: yellow; 
-      border-radius: 50%; 
-      box-shadow: 0 0 10px white; 
+    .star {
+      position: absolute;
+      background: yellow;
+      border-radius: 50%;
+      box-shadow: 0 0 10px white;
     }
-    .bomb 
-    { 
-      position: absolute; 
-      background: red; 
-      border-radius: 50%; 
-      box-shadow: 0 0 10px white; 
+    #score, #lifelines {
+      position: absolute;
+      top: 10px;
+      font-size: 20px;
     }
-    #score, #lifelines 
-    { 
-      position: absolute; 
-      top: 10px; 
-      left: 10px; 
-      font-size: 20px; 
+    #score {
+      left: 10px;
     }
-    #lifelines 
-    { 
-      left: 130px; 
+    #lifelines {
+      left: 130px;
     }
-    #startScreen, #difficultyScreen, #gameOverScreen, #winScreen 
-    { 
-      position: absolute; 
-      top: 0; 
-      left: 0; 
-      width: 100%; 
-      height: 100vh; 
-      background: #000033; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      flex-direction: column; 
-      z-index: 10; 
+    #startScreen, #difficultyScreen, #gameOverScreen, #winScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: #000033;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 10;
     }
-    button 
-    { 
-      margin: 10px; 
-      padding: 10px 20px; 
-      font-size: 18px; 
-      cursor: pointer; 
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div id="startScreen"><h1>Catch the Falling Stars</h1><button onclick="showDifficulty()">Start Game</button></div>
-  <div id="difficultyScreen" style="display: none;"><h1>Select Difficulty</h1><button onclick="startGame('easy')">Easy</button><button onclick="startGame('medium')">Medium</button><button onclick="startGame('hard')">Hard</button><button onclick="startGame('extreme')">Extreme</button></div>
-  <div id="game"><div class="basket" id="basket"></div><div id="score">Score: 0</div><div id="lifelines">❤️</div></div>
-  <div id="gameOverScreen" style="display: none;"><h1>Game Over</h1><p id="finalScore"></p><button onclick="restartGame()">Play Again</button></div>
-  <div id="winScreen" style="display: none;"><h1>You Won!</h1><p>Congratulations! You caught 50 stars!</p><button onclick="restartGame()">Play Again</button></div>
+  <div id="startScreen">
+    <h1>Catch the Falling Stars</h1>
+    <button onclick="showDifficulty()">Start Game</button>
+  </div>
+  <div id="difficultyScreen" style="display: none;">
+    <h1>Select Difficulty</h1>
+    <button onclick="startGame('easy')">Easy</button>
+    <button onclick="startGame('medium')">Medium</button>
+    <button onclick="startGame('hard')">Hard</button>
+  </div>
+  <div id="game">
+    <div class="basket" id="basket"></div>
+    <div id="score">Score: 0</div>
+    <div id="lifelines">❤️❤️</div>
+  </div>
+  <div id="gameOverScreen" style="display: none;">
+    <h1>Game Over</h1>
+    <p id="finalScore"></p>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
+  <div id="winScreen" style="display: none;">
+    <h1>You Won!</h1>
+    <p>Congratulations! You caught 50 stars!</p>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
   <script>
-    let score = 0, lifelines = 2, basketLeft = window.innerWidth / 2 - 50, gameRunning = false, minSpeed = 4, maxSpeed = 7;
-    const basket = document.getElementById("basket"), scoreDisplay = document.getElementById("score"), lifelineDisplay = document.getElementById("lifelines"), game = document.getElementById("game");
-    function showDifficulty() 
-    { 
-      document.getElementById("startScreen").style.display = "none"; 
-      document.getElementById("difficultyScreen").style.display = "flex"; 
+    let score = 0, lifelines = 2, basketLeft = window.innerWidth / 2 - 50;
+    let gameRunning = false, minSpeed = 7, maxSpeed = 12;
+    let spawnInterval;
+    const basket = document.getElementById("basket");
+    const scoreDisplay = document.getElementById("score");
+    const lifelineDisplay = document.getElementById("lifelines");
+    const game = document.getElementById("game");
+    function showDifficulty() {
+      document.getElementById("startScreen").style.display = "none";
+      document.getElementById("difficultyScreen").style.display = "flex";
     }
-    function startGame(difficulty) 
-    { 
-      document.getElementById("difficultyScreen").style.display = "none"; 
-      game.style.display = "block"; 
-      score = 0; 
-      lifelines = difficulty === 'easy' ? 2 : (difficulty === 'medium' ? 3 : (difficulty === 'hard' ? 4 : 5)); 
-      updateScore(); 
-      gameRunning = true; 
-      minSpeed = difficulty === 'easy' ? 7 : (difficulty === 'medium' ? 13 : (difficulty === 'hard' ? 21 : 30)); 
-      maxSpeed = difficulty === 'easy' ? 12 : (difficulty === 'medium' ? 20 : (difficulty === 'hard' ? 30 : 35)); 
-      
-      document.addEventListener("mousemove", moveBasket); 
-      document.addEventListener("touchmove", moveBasketTouch); 
-      spawnStar(); 
+    function startGame(difficulty) {
+      document.getElementById("difficultyScreen").style.display = "none";
+      game.style.display = "block";
+      score = 0;
+      lifelines = (difficulty === 'easy') ? 2 : 3;
+      if (difficulty === 'easy') {
+        minSpeed = 7;
+        maxSpeed = 12;
+      } else if (difficulty === 'medium') {
+        minSpeed = 13;
+        maxSpeed = 20;
+      } else if (difficulty === 'hard') {
+        minSpeed = 21;
+        maxSpeed = 27;
+      }
+      updateUI();
+      gameRunning = true;
+      document.addEventListener("mousemove", moveBasket);
+      document.addEventListener("touchmove", moveBasketTouch);
+      const spawnRate = (difficulty === 'easy') ? 1000 : (difficulty === 'medium') ? 700 : 500;
+
+      spawnInterval = setInterval(() => {
+        if (gameRunning) spawnStar();
+      }, spawnRate);
     }
-    function moveBasket(e) 
-    { 
-      if (!gameRunning) return; 
-      const mouseX = e.clientX; 
-      basketLeft = Math.min(window.innerWidth - 100, Math.max(0, mouseX - 50)); 
-      basket.style.left = basketLeft + "px"; 
-    }
-    function moveBasketTouch(e) 
-    { 
-      if (!gameRunning) return; 
-      const touchX = e.touches[0].clientX; 
-      basketLeft = Math.min(window.innerWidth - 100, Math.max(0, touchX - 50)); 
-      basket.style.left = basketLeft + "px"; 
-    }
-    function spawnStar() 
-    { 
+    function moveBasket(e) {
       if (!gameRunning) return;
-      const isBomb = Math.random() < 0.2;
-      const element = document.createElement("div"); 
-      const size = Math.random() * 10 + 10; 
-      const leftPos = Math.random() * (window.innerWidth - size); 
-      
-      if (isBomb) 
-      { 
-        element.classList.add("bomb"); 
-        element.style.width = size + "px"; 
-        element.style.height = size + "px"; 
-      } 
-      else 
-      { 
-        element.classList.add("star"); 
-        element.style.background = "yellow"; 
-        element.style.width = size + "px"; 
-        element.style.height = size + "px"; 
-      } 
-      element.style.left = leftPos + "px"; 
-      element.style.top = "0px"; 
-      game.appendChild(element); 
-      const speed = Math.random() * (maxSpeed - minSpeed) + minSpeed; 
-      moveElement(element, speed, leftPos, isBomb); 
+      const mouseX = e.clientX;
+      basketLeft = Math.min(window.innerWidth - 100, Math.max(0, mouseX - 50));
+      basket.style.left = basketLeft + "px";
     }
-    function moveElement(element, speed, initialLeft, isBomb) 
-    { 
-      let top = 0; 
-      let left = initialLeft; 
-      let direction = Math.random() < 0.5 ? -1 : 1; 
-      let horizontalSpeed = Math.random() * 2 + 1 * direction; 
+    function moveBasketTouch(e) {
+      if (!gameRunning) return;
+      const touchX = e.touches[0].clientX;
+      basketLeft = Math.min(window.innerWidth - 100, Math.max(0, touchX - 50));
+      basket.style.left = basketLeft + "px";
+    }
+    function spawnStar() {
+      const star = document.createElement("div");
+      const size = Math.random() * 10 + 10;
+      const leftPos = Math.random() * (window.innerWidth - size);
+      star.classList.add("star");
+      star.style.width = size + "px";
+      star.style.height = size + "px";
+      star.style.left = leftPos + "px";
+      star.style.top = "0px";
+      game.appendChild(star);
+      const speed = Math.random() * (maxSpeed - minSpeed) + minSpeed;
+      moveElement(star, speed, leftPos);
+    }
+    function moveElement(element, speed, initialLeft) {
+      let top = 0;
+      let left = initialLeft;
+      let direction = Math.random() < 0.5 ? -1 : 1;
+      let horizontalSpeed = (Math.random() * 2 + 1) * direction;
       let verticalSpeed = speed;
-      const fallInterval = setInterval(() => 
-      { 
-        top += verticalSpeed; 
-        left += horizontalSpeed; 
-        if (left <= 0 || left >= window.innerWidth - element.offsetWidth) 
-        { 
-          horizontalSpeed = -horizontalSpeed; 
-        } 
-        element.style.left = left + 'px'; 
-        element.style.top = top + 'px'; 
-        const elementRect = element.getBoundingClientRect(); 
-        const basketRect = basket.getBoundingClientRect(); 
-        
-        if ( 
-          elementRect.bottom >= basketRect.top && 
-          !(elementRect.right < basketRect.left || elementRect.left > basketRect.right) 
-        ) 
-        { 
-          if (isBomb) 
-          { 
-            lifelines--; 
-            updateScore(); 
-            element.remove(); 
-            clearInterval(fallInterval); 
-            if (lifelines <= 0) endGame(); 
-          } 
-          else 
-          { 
-            score++; 
-            updateScore(); 
-            element.remove(); 
-            clearInterval(fallInterval); 
-            if (score >= 50) winGame(); 
-          } 
-        }  
-        if (top > window.innerHeight) 
-        { 
-          if (!isBomb) 
-          { 
-            score--; 
-            updateScore(); 
-          } 
-          element.remove(); 
-          clearInterval(fallInterval); 
-          if (score <= 0) endGame(); 
-        } 
-      }, 20); 
+      const fallInterval = setInterval(() => {
+        top += verticalSpeed;
+        left += horizontalSpeed;
+
+        if (left <= 0 || left >= window.innerWidth - element.offsetWidth) {
+          horizontalSpeed = -horizontalSpeed;
+        }
+        element.style.left = left + 'px';
+        element.style.top = top + 'px';
+
+        const elementRect = element.getBoundingClientRect();
+        const basketRect = basket.getBoundingClientRect();
+
+        if (
+          elementRect.bottom >= basketRect.top &&
+          !(elementRect.right < basketRect.left || elementRect.left > basketRect.right)
+        ) {
+          element.remove();
+          clearInterval(fallInterval);
+          score++;
+          updateUI();
+          if (score >= 50) winGame();
+        }
+
+        if (top > window.innerHeight) {
+          element.remove();
+          clearInterval(fallInterval);
+          lifelines--;
+          updateUI();
+          if (lifelines <= 0) endGame();
+        }
+      }, 10);
     }
-    function updateScore() 
-    { 
-      scoreDisplay.innerText = "Score: " + score; 
-      lifelineDisplay.innerText = "❤️ " + lifelines; 
+    function updateUI() {
+      scoreDisplay.innerText = "Score: " + score;
+      lifelineDisplay.innerText = "❤️".repeat(lifelines);
     }
-    function endGame() 
-    { 
-      gameRunning = false; 
-      document.removeEventListener("mousemove", moveBasket); 
-      document.removeEventListener("touchmove", moveBasketTouch); 
-      game.style.display = "none"; 
-      document.getElementById("gameOverScreen").style.display = "flex"; 
-      document.getElementById("finalScore").innerText = "Your final score was: " + score; 
+    function endGame() {
+      gameRunning = false;
+      clearInterval(spawnInterval);
+      document.removeEventListener("mousemove", moveBasket);
+      document.removeEventListener("touchmove", moveBasketTouch);
+      game.style.display = "none";
+      document.getElementById("gameOverScreen").style.display = "flex";
+      document.getElementById("finalScore").innerText = "Your final score was: " + score;
     }
-    function winGame() 
-    { 
-      gameRunning = false; 
-      document.removeEventListener("mousemove", moveBasket); 
-      document.removeEventListener("touchmove", moveBasketTouch); 
-      game.style.display = "none"; 
-      document.getElementById("winScreen").style.display = "flex"; 
+    function winGame() {
+      gameRunning = false;
+      clearInterval(spawnInterval);
+      document.removeEventListener("mousemove", moveBasket);
+      document.removeEventListener("touchmove", moveBasketTouch);
+      game.style.display = "none";
+      document.getElementById("winScreen").style.display = "flex";
     }
-    function restartGame() 
-    { 
-      document.getElementById("gameOverScreen").style.display = "none"; 
-      document.getElementById("winScreen").style.display = "none"; 
-      document.getElementById("startScreen").style.display = "flex"; 
+    function restartGame() {
+      document.getElementById("gameOverScreen").style.display = "none";
+      document.getElementById("winScreen").style.display = "none";
+      document.getElementById("startScreen").style.display = "flex";
     }
-    window.addEventListener("resize", () => 
-    { 
-      basketLeft = Math.min(window.innerWidth - 100, basketLeft); 
-      basket.style.left = basketLeft + "px"; 
-    }); 
+    window.addEventListener("resize", () => {
+      basketLeft = Math.min(window.innerWidth - 100, basketLeft);
+      basket.style.left = basketLeft + "px";
+    });
   </script>
-  <audio id="catchSound" src="catch.mp3" preload="auto"></audio>
 </body>
 </html>
