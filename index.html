@@ -217,15 +217,18 @@
         const basketRect = basket.getBoundingClientRect();
 
         if (
-          starRect.bottom >= basketRect.top &&
-          !(starRect.right < basketRect.left || starRect.left > basketRect.right)
+        starRect.bottom >= basketRect.top &&
+      !(starRect.right < basketRect.left || starRect.left > basketRect.right)
         ) {
-          score++;
-          updateScore();
-          star.remove();
-          clearInterval(fallInterval);
+            document.getElementById("catchSound").currentTime = 0;
+            document.getElementById("catchSound").play();
+            score++;
+            updateScore();
+            star.remove();
+            clearInterval(fallInterval);
           if (score >= 50) winGame();
-        }
+          }
+
 
         if (top > window.innerHeight) {
           score--;
@@ -269,5 +272,6 @@
       basket.style.left = basketLeft + "px";
     });
   </script>
+  <audio id="catchSound" src="catch.mp3" preload="auto"></audio>
 </body>
 </html>
