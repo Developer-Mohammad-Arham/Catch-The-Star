@@ -95,6 +95,7 @@
     <p>Congratulations! You caught 50 stars!</p>
     <button onclick="restartGame()">Play Again</button>
   </div>
+
   <script>
     let score = 0, lifelines = 2, basketLeft = window.innerWidth / 2 - 50;
     let gameRunning = false, minSpeed = 7, maxSpeed = 12;
@@ -103,24 +104,26 @@
     const scoreDisplay = document.getElementById("score");
     const lifelineDisplay = document.getElementById("lifelines");
     const game = document.getElementById("game");
+
     function showDifficulty() {
       document.getElementById("startScreen").style.display = "none";
       document.getElementById("difficultyScreen").style.display = "flex";
     }
+
     function startGame(difficulty) {
       document.getElementById("difficultyScreen").style.display = "none";
       game.style.display = "block";
       score = 0;
       lifelines = (difficulty === 'easy') ? 2 : 3;
       if (difficulty === 'easy') {
-        minSpeed = 4;
-        maxSpeed = 9;
+        minSpeed = 7;
+        maxSpeed = 12;
       } else if (difficulty === 'medium') {
-        minSpeed = 10;
-        maxSpeed = 16;
+        minSpeed = 13;
+        maxSpeed = 20;
       } else if (difficulty === 'hard') {
-        minSpeed = 17;
-        maxSpeed = 25;
+        minSpeed = 21;
+        maxSpeed = 27;
       }
       updateUI();
       gameRunning = true;
@@ -132,18 +135,21 @@
         if (gameRunning) spawnStar();
       }, spawnRate);
     }
+
     function moveBasket(e) {
       if (!gameRunning) return;
       const mouseX = e.clientX;
       basketLeft = Math.min(window.innerWidth - 100, Math.max(0, mouseX - 50));
       basket.style.left = basketLeft + "px";
     }
+
     function moveBasketTouch(e) {
       if (!gameRunning) return;
       const touchX = e.touches[0].clientX;
       basketLeft = Math.min(window.innerWidth - 100, Math.max(0, touchX - 50));
       basket.style.left = basketLeft + "px";
     }
+
     function spawnStar() {
       const star = document.createElement("div");
       const size = Math.random() * 10 + 10;
@@ -157,12 +163,15 @@
       const speed = Math.random() * (maxSpeed - minSpeed) + minSpeed;
       moveElement(star, speed, leftPos);
     }
+
     function moveElement(element, speed, initialLeft) {
       let top = 0;
       let left = initialLeft;
       let direction = Math.random() < 0.5 ? -1 : 1;
       let horizontalSpeed = (Math.random() * 2 + 1) * direction;
       let verticalSpeed = speed;
+      const basketTopBuffer = 10;
+
       const fallInterval = setInterval(() => {
         top += verticalSpeed;
         left += horizontalSpeed;
@@ -170,15 +179,17 @@
         if (left <= 0 || left >= window.innerWidth - element.offsetWidth) {
           horizontalSpeed = -horizontalSpeed;
         }
+
         element.style.left = left + 'px';
         element.style.top = top + 'px';
 
         const elementRect = element.getBoundingClientRect();
         const basketRect = basket.getBoundingClientRect();
-
         if (
-          elementRect.bottom >= basketRect.top &&
-          !(elementRect.right < basketRect.left || elementRect.left > basketRect.right)
+          elementRect.bottom >= basketRect.top - basketTopBuffer &&
+          elementRect.top <= basketRect.bottom &&
+          elementRect.right >= basketRect.left &&
+          elementRect.left <= basketRect.right
         ) {
           element.remove();
           clearInterval(fallInterval);
@@ -196,10 +207,12 @@
         }
       }, 10);
     }
+
     function updateUI() {
       scoreDisplay.innerText = "Score: " + score;
       lifelineDisplay.innerText = "❤️".repeat(lifelines);
     }
+
     function endGame() {
       gameRunning = false;
       clearInterval(spawnInterval);
@@ -209,6 +222,7 @@
       document.getElementById("gameOverScreen").style.display = "flex";
       document.getElementById("finalScore").innerText = "Your final score was: " + score;
     }
+
     function winGame() {
       gameRunning = false;
       clearInterval(spawnInterval);
@@ -217,11 +231,13 @@
       game.style.display = "none";
       document.getElementById("winScreen").style.display = "flex";
     }
+
     function restartGame() {
       document.getElementById("gameOverScreen").style.display = "none";
       document.getElementById("winScreen").style.display = "none";
       document.getElementById("startScreen").style.display = "flex";
     }
+
     window.addEventListener("resize", () => {
       basketLeft = Math.min(window.innerWidth - 100, basketLeft);
       basket.style.left = basketLeft + "px";
