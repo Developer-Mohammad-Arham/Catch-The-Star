@@ -116,14 +116,14 @@
       score = 0;
       lifelines = (difficulty === 'easy') ? 2 : 3;
       if (difficulty === 'easy') {
-        minSpeed = 7;
-        maxSpeed = 12;
+        minSpeed = 4;
+        maxSpeed = 9;
       } else if (difficulty === 'medium') {
-        minSpeed = 13;
-        maxSpeed = 20;
+        minSpeed = 10;
+        maxSpeed = 15;
       } else if (difficulty === 'hard') {
-        minSpeed = 21;
-        maxSpeed = 27;
+        minSpeed = 16;
+        maxSpeed = 20;
       }
       updateUI();
       gameRunning = true;
