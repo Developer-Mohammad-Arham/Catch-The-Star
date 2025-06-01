@@ -19,6 +19,11 @@
       height: 100vh;
       background: linear-gradient(#000022, #000011);
       display: none;
+
+      /* Black borders with 1.5 cm width */
+      border-left: 1.2cm solid black;
+      border-right: 1.2cm solid black;
+      box-sizing: border-box;
     }
 
     .basket {
@@ -43,6 +48,13 @@
       position: absolute;
       top: 10px;
       left: 10px;
+      font-size: 20px;
+    }
+
+    #lifelines {
+      position: absolute;
+      top: 10px;
+      left: 130px;
       font-size: 20px;
     }
 
@@ -89,6 +101,7 @@
   <div id="game">
     <div class="basket" id="basket"></div>
     <div id="score">Score: 0</div>
+    <div id="lifelines">❤️</div>
   </div>
 
   <!-- Game Over Screen -->
@@ -109,6 +122,7 @@
     const basket = document.getElementById("basket");
     const game = document.getElementById("game");
     const scoreDisplay = document.getElementById("score");
+    const lifelineDisplay = document.getElementById("lifelines");
     const startScreen = document.getElementById("startScreen");
     const difficultyScreen = document.getElementById("difficultyScreen");
     const gameOverScreen = document.getElementById("gameOverScreen");
@@ -116,6 +130,8 @@
     const finalScore = document.getElementById("finalScore");
 
     let score = 0;
+    let lifelines = 0;
+    let missesInARow = 0;
     let basketLeft = window.innerWidth / 2 - 50;
     let gameRunning = false;
     let minSpeed = 4;
@@ -130,48 +146,61 @@
       difficultyScreen.style.display = "none";
       game.style.display = "block";
       score = 0;
+      missesInARow = 0;
       updateScore();
-      gameRunning = true;
 
       switch(difficulty) {
         case "easy":
           minSpeed = 7;
           maxSpeed = 12;
+          lifelines = 2;
           break;
         case "medium":
           minSpeed = 13;
           maxSpeed = 20;
+          lifelines = 3;
           break;
         case "hard":
           minSpeed = 21;
           maxSpeed = 30;
+          lifelines = 3;
           break;
       }
 
+      updateLifelines();
+
+      gameRunning = true;
       document.addEventListener("mousemove", moveBasket);
       document.addEventListener("touchmove", moveBasketTouch);
       spawnStar();
     }
 
+    function updateLifelines() {
+      lifelineDisplay.innerText = "❤️".repeat(Math.max(0, lifelines));
+    }
+
     function moveBasket(e) {
       if (!gameRunning) return;
       const mouseX = e.clientX;
-      basketLeft = Math.min(window.innerWidth - 100, Math.max(0, mouseX - 50));
+
+      // Ensure basket stays within the borders
+      basketLeft = Math.min(window.innerWidth - 100 - 30, Math.max(30, mouseX - 50));
       basket.style.left = basketLeft + "px";
     }
 
     function moveBasketTouch(e) {
       if (!gameRunning) return;
       const touchX = e.touches[0].clientX;
-      basketLeft = Math.min(window.innerWidth - 100, Math.max(0, touchX - 50));
+
+      // Ensure basket stays within the borders
+      basketLeft = Math.min(window.innerWidth - 100 - 30, Math.max(30, touchX - 50));
       basket.style.left = basketLeft + "px";
     }
 
     function spawnStar() {
       if (!gameRunning) return;
       createStar();
-
-      const nextSpawnTime = Math.random() * 1500 + 200; // 200–1700ms
+      const nextSpawnTime = Math.random() * 1500 + 200;
       setTimeout(spawnStar, nextSpawnTime);
     }
 
@@ -179,19 +208,19 @@
       const star = document.createElement("div");
       star.classList.add("star");
 
-      const size = Math.random() * 10 + 10; // 10–20px
+      const size = Math.random() * 10 + 10;
       star.style.width = size + "px";
       star.style.height = size + "px";
 
-      const leftPos = Math.random() * (window.innerWidth - size);
+      const leftPos = Math.random() * (window.innerWidth - size - 30) + 30; // Keep it inside borders
       star.style.left = leftPos + "px";
       star.style.top = "0px";
 
       game.appendChild(star);
 
-      const isFastStar = Math.random() < 0.1; // 10% chance
+      const isFastStar = Math.random() < 0.1;
       const speed = isFastStar
-        ? Math.random() * 20 + 15 // 15–35
+        ? Math.random() * 20 + 15
         : Math.random() * (maxSpeed - minSpeed) + minSpeed;
 
       moveStar(star, speed, leftPos);
@@ -199,7 +228,7 @@
 
     function moveStar(star, speed, initialLeft) {
       let top = 0;
-      let zigzag = Math.random() < 0.3; // 30% chance to zigzag
+      let zigzag = Math.random() < 0.3;
       let direction = Math.random() < 0.5 ? -1 : 1;
       let shift = 0;
 
@@ -208,7 +237,11 @@
 
         if (zigzag) {
           shift += direction * 0.5;
-          star.style.left = (initialLeft + shift) + "px";
+          let newLeft = initialLeft + shift;
+          if (newLeft < 30 || newLeft > window.innerWidth - 30 - star.offsetWidth) {
+            direction *= -1; // Rebounds the star off the walls
+          }
+          star.style.left = newLeft + "px";
         }
 
         star.style.top = top + "px";
@@ -217,25 +250,31 @@
         const basketRect = basket.getBoundingClientRect();
 
         if (
-        starRect.bottom >= basketRect.top &&
-      !(starRect.right < basketRect.left || starRect.left > basketRect.right)
+          starRect.bottom >= basketRect.top &&
+          !(starRect.right < basketRect.left || starRect.left > basketRect.right)
         ) {
-            document.getElementById("catchSound").currentTime = 0;
-            document.getElementById("catchSound").play();
-            score++;
-            updateScore();
-            star.remove();
-            clearInterval(fallInterval);
+          document.getElementById("catchSound").currentTime = 0;
+          document.getElementById("catchSound").play();
+          score++;
+          missesInARow = 0;
+          updateScore();
+          updateLifelines();
+          star.remove();
+          clearInterval(fallInterval);
           if (score >= 50) winGame();
-          }
-
+        }
 
         if (top > window.innerHeight) {
           score--;
+          lifelines--;  // Lose 1 lifeline on each miss
           updateScore();
+          updateLifelines();
           star.remove();
           clearInterval(fallInterval);
-          if (score < 0) endGame();
+
+          if (score <= 0 || lifelines <= 0) {
+            endGame();
+          }
         }
       }, 20);
     }
@@ -268,7 +307,7 @@
     }
 
     window.addEventListener("resize", () => {
-      basketLeft = Math.min(window.innerWidth - 100, basketLeft);
+      basketLeft = Math.min(window.innerWidth - 100 - 30, basketLeft);
       basket.style.left = basketLeft + "px";
     });
   </script>
