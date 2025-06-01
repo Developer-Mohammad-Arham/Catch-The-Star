@@ -66,21 +66,40 @@
       moveStar(star, speed, leftPos);
     }
     function moveStar(star, speed, initialLeft) {
-      let top = 0, zigzag = Math.random() < 0.3, direction = Math.random() < 0.5 ? -1 : 1, shift = 0;
-      const fallInterval = setInterval(() => {
-        top += speed;
-        if (zigzag) { shift += direction * 0.5; star.style.left = (initialLeft + shift) + "px"; }
-        star.style.top = top + "px";
-        const starRect = star.getBoundingClientRect();
-        const basketRect = basket.getBoundingClientRect();
-        if (starRect.bottom >= basketRect.top && !(starRect.right < basketRect.left || starRect.left > basketRect.right)) {
-          score++; updateScore(); star.remove(); clearInterval(fallInterval);
-          if (score >= 50) winGame();
-        }
-        if (top > window.innerHeight) {
-          score--; lifelines--; updateScore(); star.remove(); clearInterval(fallInterval);
-          if (score <= 0 || lifelines <= 0) endGame();
-        }
+    let top = 0;
+    let left = initialLeft;
+    let direction = Math.random() < 0.5 ? -1 : 1;
+    let horizontalSpeed = Math.random() * 2 + 1 * direction;
+    let verticalSpeed = speed;
+    const fallInterval = setInterval(() => {
+    top += verticalSpeed;
+    left += horizontalSpeed;
+    if (left <= 0 || left >= window.innerWidth - star.offsetWidth) {
+      horizontalSpeed = -horizontalSpeed;
+    }
+    star.style.left = left + 'px';
+    star.style.top = top + 'px';
+    const starRect = star.getBoundingClientRect();
+    const basketRect = basket.getBoundingClientRect();
+    if (
+      starRect.bottom >= basketRect.top &&
+      !(starRect.right < basketRect.left || starRect.left > basketRect.right)
+    ) {
+      document.getElementById('catchSound').currentTime = 0;
+      document.getElementById('catchSound').play();
+      score++;
+      updateScore();
+      star.remove();
+      clearInterval(fallInterval);
+      if (score >= 50) winGame();
+    }
+    if (top > window.innerHeight) {
+      score--;
+      updateScore();
+      star.remove();
+      clearInterval(fallInterval);
+      if (score <= 0) endGame();
+    }
       }, 20);
     }
     function updateScore() {
