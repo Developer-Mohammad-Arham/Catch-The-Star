@@ -34,8 +34,6 @@
 
     .star {
       position: absolute;
-      width: 20px;
-      height: 20px;
       background: yellow;
       border-radius: 50%;
       box-shadow: 0 0 10px white;
@@ -137,16 +135,16 @@
 
       switch(difficulty) {
         case "easy":
-          minSpeed = 4;
-          maxSpeed = 7;
-          break;
-        case "medium":
           minSpeed = 7;
           maxSpeed = 12;
           break;
+        case "medium":
+          minSpeed = 13;
+          maxSpeed = 20;
+          break;
         case "hard":
-          minSpeed = 15;
-          maxSpeed = 25;
+          minSpeed = 21;
+          maxSpeed = 30;
           break;
       }
 
@@ -172,25 +170,47 @@
     function spawnStar() {
       if (!gameRunning) return;
       createStar();
-      const nextSpawnTime = Math.random() * 700 + 300; // 300–1000 ms
+
+      const nextSpawnTime = Math.random() * 1500 + 200; // 200–1700ms
       setTimeout(spawnStar, nextSpawnTime);
     }
 
     function createStar() {
       const star = document.createElement("div");
       star.classList.add("star");
-      star.style.left = Math.random() * (window.innerWidth - 20) + "px";
+
+      const size = Math.random() * 10 + 10; // 10–20px
+      star.style.width = size + "px";
+      star.style.height = size + "px";
+
+      const leftPos = Math.random() * (window.innerWidth - size);
+      star.style.left = leftPos + "px";
       star.style.top = "0px";
+
       game.appendChild(star);
 
-      const speed = Math.random() * (maxSpeed - minSpeed) + minSpeed;
-      moveStar(star, speed);
+      const isFastStar = Math.random() < 0.1; // 10% chance
+      const speed = isFastStar
+        ? Math.random() * 20 + 15 // 15–35
+        : Math.random() * (maxSpeed - minSpeed) + minSpeed;
+
+      moveStar(star, speed, leftPos);
     }
 
-    function moveStar(star, speed) {
+    function moveStar(star, speed, initialLeft) {
       let top = 0;
+      let zigzag = Math.random() < 0.3; // 30% chance to zigzag
+      let direction = Math.random() < 0.5 ? -1 : 1;
+      let shift = 0;
+
       const fallInterval = setInterval(() => {
         top += speed;
+
+        if (zigzag) {
+          shift += direction * 0.5;
+          star.style.left = (initialLeft + shift) + "px";
+        }
+
         star.style.top = top + "px";
 
         const starRect = star.getBoundingClientRect();
